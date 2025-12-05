@@ -21,22 +21,25 @@ fun main() {
         }.second
     }
 
-    // Or read a large test input from the `src/Day01_test.txt` file:
     val testInput = readInput("Day01_test")
-    check(part1(testInput) == 3)
-
-    part2(testInput).println()
-    check(part2(testInput) == 6)
-
-    // Read the input from the `src/Day01.txt` file.
     val input = readInput("Day01")
-    print("Part 1: ")
-    part1(input).println()
-    print("Part 2: ")
-    part2(input).println()
+
+    // Part 1
+    val part1Test = part1(testInput)
+    println("Part 1 Test: $part1Test")
+    check(part1Test == 3)
+
+    println("Part 1: ${part1(input)}")
+
+    // Part 2
+    val part2Test = part2(testInput)
+    println("Part 2 Test: $part2Test")
+    check(part2Test == 6)
+
+    println("Part 2: ${part2(input)}")
 }
 
-fun rotate(dial: Int, direction: Char, distance: Int): Int {
+private fun rotate(dial: Int, direction: Char, distance: Int): Int {
     return when (direction) {
         'L' -> (dial - distance).mod(100)
         'R' -> (dial + distance).mod(100)
@@ -44,7 +47,7 @@ fun rotate(dial: Int, direction: Char, distance: Int): Int {
     }
 }
 
-fun rotateWithZeroes(dial: Int, direction: Char, distance: Int): Pair<Int, Int> {
+private fun rotateWithZeroes(dial: Int, direction: Char, distance: Int): Pair<Int, Int> {
     return when (direction) {
         'L' -> {
             val newDial = (dial - distance).mod(100)
