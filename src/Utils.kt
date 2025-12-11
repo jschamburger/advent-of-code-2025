@@ -83,7 +83,7 @@ data class Coordinate(val y: Int, val x: Int) {
 typealias Matrix<T> = MutableList<MutableList<T>>
 
 fun <T> Matrix<T>.safeGet(coordinate: Coordinate): T? {
-    return if (coordinate.x < 0 || coordinate.y < 0 || coordinate.x >= this[0].size || coordinate.y >= this.size) {
+    return if (coordinate.x < 0 || coordinate.y < 0 || coordinate.x >= this[coordinate.y].size || coordinate.y >= this.size) {
         null
     } else {
         this[coordinate.y][coordinate.x]
@@ -100,7 +100,7 @@ fun createMatrix(input: List<String>): Matrix<Char> {
 }
 
 fun <T> Matrix<T>.sizeY() = size
-fun <T> Matrix<T>.sizeX() = this[0].size
+fun <T> Matrix<T>.sizeX() = this.maxOf { it.size }
 
 fun <T> Matrix<T>.coordinates(): List<Coordinate> {
     return (0 until sizeY()).map { y ->
@@ -108,6 +108,14 @@ fun <T> Matrix<T>.coordinates(): List<Coordinate> {
             Coordinate(y, x)
         }.toList()
     }.toList().flatten()
+}
+
+fun <T> Matrix<T>.columns(default: T): List<List<T>> {
+    return (0 until sizeX()).map { x ->
+        (0 until sizeY()).map { y ->
+            safeGet(Coordinate(y, x)) ?: default
+        }.toList()
+    }.toList()
 }
 
 fun <T>Matrix<T>.copy(): Matrix<T> {
