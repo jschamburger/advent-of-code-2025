@@ -2,6 +2,8 @@ import java.math.BigInteger
 import java.security.MessageDigest
 import kotlin.io.path.Path
 import kotlin.io.path.readText
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Reads lines from the given input txt file.
@@ -21,38 +23,38 @@ fun String.md5() = BigInteger(1, MessageDigest.getInstance("MD5").digest(toByteA
 fun Any?.println() = println(this)
 
 enum class Direction {
-    TOP, RIGHT, BOTTOM, LEFT;
+    UP, RIGHT, DOWN, LEFT;
 
     fun rotateClockwise(): Direction =
         when (this) {
-            TOP -> RIGHT
-            RIGHT -> BOTTOM
-            BOTTOM -> LEFT
-            LEFT -> TOP
+            UP -> RIGHT
+            RIGHT -> DOWN
+            DOWN -> LEFT
+            LEFT -> UP
         }
 
     fun rotateCounterclockwise(): Direction =
         when (this) {
-            TOP -> LEFT
-            RIGHT -> TOP
-            BOTTOM -> RIGHT
-            LEFT -> BOTTOM
+            UP -> LEFT
+            RIGHT -> UP
+            DOWN -> RIGHT
+            LEFT -> DOWN
         }
 
     companion object {
         fun fromTo(from: Coordinate, position: Coordinate): Direction =
             when (position) {
-                from.top() -> TOP
+                from.top() -> UP
                 from.right() -> RIGHT
-                from.bottom() -> BOTTOM
+                from.bottom() -> DOWN
                 else -> LEFT
             }
 
         fun fromChar(char: Char): Direction =
             when (char) {
-                '^' -> TOP
+                '^' -> UP
                 '>' -> RIGHT
-                'v' -> BOTTOM
+                'v' -> DOWN
                 else -> LEFT
             }
     }
@@ -73,17 +75,53 @@ data class Coordinate(val y: Int, val x: Int) {
     fun adjacent() = setOf(topLeft(), top(), topRight(), right(), bottomRight(), bottom(), bottomLeft(), left())
     fun neighbour(direction: Direction) =
         when (direction) {
-            Direction.TOP -> top()
+            Direction.UP -> top()
             Direction.RIGHT -> right()
-            Direction.BOTTOM -> bottom()
+            Direction.DOWN -> bottom()
             Direction.LEFT -> left()
         }
+}
+
+fun Coordinate.isInsideRectangle(a: Coordinate, b: Coordinate): Boolean {
+    val minY = minOf(a.y, b.y)
+    val maxY = maxOf(a.y, b.y)
+    val minX = minOf(a.x, b.x)
+    val maxX = maxOf(a.x, b.x)
+    return this.x in minX + 1 until maxX && this.y in minY + 1 until maxY
+}
+
+fun Coordinate.pathTo(other: Coordinate): List<Coordinate> =
+    buildList {
+        for (yi in min(y, other.y) .. max(y, other.y)) {
+            for (xi in min(x, other.x) .. max(x, other.x)) {
+                add(Coordinate(yi, xi))
+            }
+        }
+    }
+
+fun Coordinate.isOnPath(a: Coordinate, b: Coordinate): Boolean {
+    val direction = when {
+        a.x < b.x -> Direction.RIGHT
+        a.x > b.x -> Direction.LEFT
+        a.y < b.y -> Direction.DOWN
+        else -> Direction.UP
+    }
+    val minY = minOf(a.y, b.y)
+    val maxY = maxOf(a.y, b.y)
+    val minX = minOf(a.x, b.x)
+    val maxX = maxOf(a.x, b.x)
+    return when (direction) {
+        Direction.UP,
+        Direction.DOWN -> this.x == b.x && this.y in (minY..maxY)
+        Direction.RIGHT,
+        Direction.LEFT -> this.y == b.y && this.x in (minX..maxX)
+    }
 }
 
 typealias Matrix<T> = MutableList<MutableList<T>>
 
 fun <T> Matrix<T>.safeGet(coordinate: Coordinate): T? {
-    return if (coordinate.x < 0 || coordinate.y < 0 || coordinate.x >= this[coordinate.y].size || coordinate.y >= this.size) {
+    return if (coordinate.x < 0 || coordinate.y < 0 || coordinate.y >= this.size || coordinate.x >= this[coordinate.y].size) {
         null
     } else {
         this[coordinate.y][coordinate.x]
@@ -116,6 +154,10 @@ fun <T> Matrix<T>.columns(default: T): List<List<T>> {
             safeGet(Coordinate(y, x)) ?: default
         }.toList()
     }.toList()
+}
+
+fun <T> Matrix<T>.set(coordinate: Coordinate, value: T) {
+    this[coordinate.y][coordinate.x] = value
 }
 
 fun <T>Matrix<T>.copy(): Matrix<T> {
